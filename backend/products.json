@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Realme C35",
+    "price": 1000,
+    "color": "green"
+  },
+  {
+    "id": 2,
+    "name": "iPhone 14 Pro",
+    "price": 1299.99,
+    "color": "purple"
+  },
+  {
+    "id": 3,
+    "name": "Sony PlayStation 5",
+    "price": 499.99,
+    "color": "white"
+  },
+  {
+    "id": 4,
+    "name": "Infinix Zero Ultra",
+    "price": 999.99,
+    "color": "blue"
+  },
+  {
+    "id": 5,
+    "name": "Samsung Galaxy S23",
+    "price": 1150,
+    "color": "black"
+  },
+  {
+    "id": 6,
+    "name": "MacBook Air M2",
+    "price": 1899,
+    "color": "silver"
+  },
+  {
+    "id": 7,
+    "name": "HP Pavilion 15",
+    "price": 799.99,
+    "color": "gray"
+  },
+  {
+    "id": 8,
+    "name": "Logitech MX Master 3S",
+    "price": 99.99,
+    "color": "black"
+  },
+  {
+    "id": 9,
+    "name": "AirPods Pro 2",
+    "price": 249.99,
+    "color": "white"
+  },
+  {
+    "id": 10,
+    "name": " Xiaomi Redmi Note 13",
+    "price": "2200",
+    "color": "black"
+  }
+]

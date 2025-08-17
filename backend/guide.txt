@@ -1,0 +1,73 @@
+📌 Routes Overview :
+app.METHOD(path, callback);
+
+🚀 Server Setup : 
+const express = require('express');
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello, this is a GET request!');
+});
+
+app.post('/users', (req, res) => {
+  res.send('User created successfully!');
+});
+
+app.put('/users/:id', (req, res) => {
+  res.send(`User with ID ${req.params.id} updated successfully!`);
+});
+
+app.delete('/users/:id', (req, res) => {
+  res.send(`User with ID ${req.params.id} deleted successfully!`);
+});
+
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
+📂 Controllers
+ Get users by ID :
+app.get('/users/:id', (req, res) => {
+  const userId = req.params.id;
+  // Logic to handle user retrieval
+}); 
+
+📥 Reading Request Data
+ - form body POST exemple :
+ app.post('/login', (req, res) => {
+  const formData = req.body;
+  // Process formData
+});
+ 
+ 2️⃣ From Query Parameters
+URL example:
+/search?key1=val1&key2=val2
+Handler:
+
+app.get('/search', (req, res) => {
+  const query = req.query;
+  // Process query object
+});
+
+🔍 Request & Response Properties
+req.params → URL parameters (/users/:id)
+
+req.query → Query string data (/search?key=value)
+
+req.headers → HTTP headers
+
+req.path → Requested path
+
+req.method → HTTP method used (GET, POST, etc.)
+
+res.status(code) → Set HTTP status code
+
+res.send(body) → Send response to client
+
+
+app.get('/success', (req, res) => {
+  res.status(200).send('Success');
+});
+
+
