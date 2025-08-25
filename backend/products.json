@@ -55,8 +55,14 @@
   },
   {
     "id": 10,
-    "name": " Xiaomi Redmi Note 13",
-    "price": "2200",
+    "name": "Xiaomi Redmi Note 13",
+    "price": 2200,
     "color": "black"
+  },
+  {
+    "id": 11,
+    "name": "oppo",
+    "price": 1200,
+    "color": "grey"
   }
 ]

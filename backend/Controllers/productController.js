@@ -1,140 +1,110 @@
+const ProductModel = require("../Models/products");
 
-const productModel = require("../Models/products");
-
-/* // GET all products
-exports.getProducts = async (req, res) => {
+// ✅ Get all products
+const getAllproducts = async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const products = await ProductModel.find();
+    res.status(200).json(products);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching products:", err);
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-// ADD a product
-exports.addProduct = async (req, res) => {
+// ✅ Get product by ID
+const getAllproductByid = async (req, res) => {
+  
   try {
-    const product = new Product(req.body);
-    await product.save();
-    res.status(201).json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const product = await ProductModel.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json(product);
+  } catch (error) {
+    console.error("Error fetching product by ID:", error);
+    res.status(400).json({ message: "Invalid product ID" });
   }
 };
 
-// UPDATE a product
-exports.updateProduct = async (req, res) => {
+// ✅ Search by name
+const SearchProductByname = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(product);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const name = req.query.name || "";
+    const products = await ProductModel.find({ name: new RegExp(name, "i") });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-// DELETE a product
-exports.deleteProduct = async (req, res) => {
+// ✅ Create product
+const CreateProduct = async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "✅ Product deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const { name, price, description, inStock } = req.body; // match frontend fields
+
+    // Simple validation
+    if (!name || !description || price <= 0) {
+      return res.status(400).json({ message: "All fields are required and price must be > 0" });
+    }
+
+    const newProduct = new ProductModel({ name, price, description, inStock });
+    const savedProduct = await newProduct.save();
+
+    res.status(201).json(savedProduct);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-}; */
-
-
-
-const getAllproducts = (req, res) => {
-  const products = productModel.getAllproducts();
-  res.status(200).json(products);
-};
-const getAllproductByid = (req, res) => {
-    const id = parseInt(req.params.id)
-    const product = productModel.getAllproductByid(id);
-    if (product) {
-        res.status(200).json(product);
-    } else {
-        res.status(404).json({ message: "Product not found" });
-    }
 };
 
-const SearchProductByname = (req, res) => {
-    const name = req.query.name; 
-
-    if (!name) {
-        return res.status(400).json({ message: "Query parameter 'name' is required" });
-    }
-
-    const product = productModel.SearchProductByname(name);
-    if (product) {
-        return res.status(200).json(product);
-    } else {
-        return res.status(404).json({ message: "Product not found" });
-    }
-};
-
-const CreateProduct = (req, res) => {
-    const { name, price, color } = req.body;
-
-    // Optional: basic validation
-    if (!name || !price || !color) {
-        return res.status(400).json({ message: "Name, price, and color are required" });
-    }
-
-    const newProduct = productModel.CreateProduct( name, price, color );
-
-    // Send success response
-    res.status(201).json({
-        message: "Product created successfully",
-        product: newProduct+1
-    });
-    productModel.saveProducts();
-};
-
-const SearchProductBymaxpriceandminproce =(req,res)=>{
-      const min=parseInt(req.params.min)
-      const max=parseInt(req.params.max)
-      if(!min || !max){
-        res.status(404).json('the min and max items are required !')
-      }
-      else {
-      const product = productModel.SearchProductBymaxpriceandminproce(min,max)
-      res.status(200).json(product)
-      }
-}
-
-const UpdateProductByid = (req,res)=>{
-  const id = parseInt(req.params.id);
-  const { name , price ,color } = req.body;
-  if (!id || !name || !price){
-    res.status(404).json('please enter the values you want to updated !')
+// ✅ Search by min/max price
+const SearchProductBymaxpriceandminprice = async (req, res) => {
+  try {
+    const min = Number(req.params.min);
+    const max = Number(req.params.max);
+    const products = await ProductModel.find({ price: { $gte: min, $lte: max } });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-  else {
-    const updatedItem = productModel.UpdateProductByid(id,name,price ,color)
-    res.status(200).json( { message:'the values has been updated successfully : ', response:updatedItem})
-    productModel.saveProducts();
+};
 
+// ✅ Update product by ID
+const UpdateProductByid = async (req, res) => {
+  try {
+    const { name, price, description, inStock } = req.body; // destructure first
+
+    const updatedProduct = await ProductModel.findByIdAndUpdate(
+      req.params.id,
+      { name, price, description, inStock }, // pass as update object
+      { new: true, runValidators: true } // return updated doc and validate
+    );
+
+    if (!updatedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.status(200).json(updatedProduct);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
-}
+};
 
-const deleteProductByid = (req,res)=>{
-    const id=parseInt(req.params.id)
-    if (!id){
-        res.status(404).json('chef please enter the id !')
-    }
-    else {
-       productModel.deleteProductByid(id)
-       res.status(200).json ('the product has been deleted successfully ! ')
-       productModel.saveProducts();
 
-    }
-}
+// ✅ Delete product by ID
+const deleteProductByid = async (req, res) => {
+  try {
+    const deletedProduct = await ProductModel.findByIdAndDelete(req.params.id);
+    if (!deletedProduct) return res.status(404).json({ message: "Product not found" });
+    res.status(200).json({ message: "Deleted successfully" });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getAllproducts,
   getAllproductByid,
   SearchProductByname,
   CreateProduct,
-  SearchProductBymaxpriceandminproce,
-  UpdateProductByid, 
-  deleteProductByid
+  SearchProductBymaxpriceandminprice,
+  UpdateProductByid,
+  deleteProductByid,
 };

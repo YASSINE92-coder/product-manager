@@ -5,111 +5,172 @@ import './style.css';
 
 function App() {
   const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({ name: "", price: "", color: "" });
-  const [updateProduct, setUpdateProduct] = useState({ id: "", name: "", price: "", color: "" });
+  const [newProduct, setNewProduct] = useState({ name: "", price: "" , description: "" , inStock: true });
+  const [updateProduct, setUpdateProduct] = useState({ id: "", name: "", price: "" , description: "", inStock: true });
   const [deleteId, setDeleteId] = useState("");
   const [searchName, setSearchName] = useState("");
-  const [min, setMin] = useState("");
-  const [max, setMax] = useState("");
-  const [theme, setTheme] = useState("light");
+  const [min, setMin] = useState();
+  const [max, setMax] = useState();
+// Get all products
+const API_URL = "http://localhost:3001/products";
+const TOKEN = "ACC1001"; // Same token your Auth middleware expects
 
-  // Effet pour appliquer le thème
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // Fonction pour basculer le thème
-  const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-  };
-
-  const fetchProducts = () => {
-    fetch("http://localhost:3001/products", {
-      headers: { Authorization: "ACC1001" }
+// Get all products
+const fetchProducts = () => {
+  fetch(API_URL, {
+    headers: { authorization: TOKEN } // matches middleware
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (Array.isArray(data)) {
+        setProducts(data.map(p => ({ ...p, id: p._id })));
+      } else {
+        setProducts([]);
+      }
     })
-      .then(res => res.json())
-      .then(data => setProducts(data))
-      .catch(err => console.error("Fetch error:", err));
+    .catch(err => console.error("Fetch error:", err));
+};
+
+// Search by name
+const fetchProductsByName = (e) => {
+  e.preventDefault();
+  fetch(`${API_URL}/search?name=${searchName}`, {
+    headers: { authorization: TOKEN }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("No products found");
+      return res.json();
+    })
+    .then(data => {
+      const arr = Array.isArray(data) ? data : [data];
+      setProducts(arr.map(p => ({ ...p, id: p._id })));
+    })
+    .catch(err => console.error("Fetch error:", err));
+};
+
+// Search by price
+const fetchProductsByPrice = (e) => {
+  e.preventDefault();
+  fetch(`${API_URL}/${min}/${max}`, {
+    headers: { authorization: TOKEN }
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("No products found");
+      return res.json();
+    })
+    .then(data => {
+      const arr = Array.isArray(data) ? data : [data];
+      setProducts(arr.map(p => ({ ...p, id: p._id })));
+    })
+    .catch(err => console.error("Fetch error:", err));
+};
+
+// Add product
+const handleAdd = (e) => {
+  e.preventDefault();
+
+  // Validate required fields
+  if (!newProduct.name || !newProduct.description || newProduct.price <= 0) {
+    console.error("All fields are required and price must be greater than 0");
+    return;
+  }
+ 
+  const productToSend = {
+    ...newProduct,
+    price: Number(newProduct.price),
+    inStock: Boolean(newProduct.inStock)
   };
 
-  const fetchProductsByName = (e) => {
-    e.preventDefault();//  prevent page reload
-    fetch(`http://localhost:3001/products/search?name=${searchName}`, {
-      headers: { Authorization: "ACC1001" }
+  console.log("Sending product:", productToSend);
+
+  fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: TOKEN // ensure proper header format
+    },
+    body: JSON.stringify(productToSend)
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to add product");
+      }
+      return res.json();
     })
-      .then(res => {
-        if (!res.ok) throw new Error("No products found");
-        return res.json();
-      })
-      .then(data => setProducts(Array.isArray(data) ? data : [data]))
-      .catch(err => console.error("Fetch error:", err));
+    .then(() => {
+      fetchProducts(); // refresh product list
+      setNewProduct({ name: "", price: "", description: "", inStock: true }); // reset form
+    })
+    .catch(err => console.error("Add error:", err));
+};
+
+// Update product
+const handleUpdate = (e) => {
+  e.preventDefault();
+
+  if (!updateProduct.id) {
+    console.error("Product ID is required to update");
+    return;
+  }
+  if (!updateProduct.name || !updateProduct.description || updateProduct.price <= 0) {
+    console.error("All fields are required and price must be greater than 0");
+    return;
+  }
+
+  const productToSend = {
+    name: updateProduct.name,
+    price: Number(updateProduct.price),
+    description: updateProduct.description,
+    inStock: Boolean(updateProduct.inStock)
   };
 
-  const fetchProductsByPrice = (e) => {
-    e.preventDefault(); // prevent page reload
-    fetch(`http://localhost:3001/products/${min}/${max}`, {
-      headers: { Authorization: "ACC1001" }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error("No products found");
-        return res.json();
-      })
-      .then(data => setProducts(Array.isArray(data) ? data : [data]))
-      .catch(err => console.error("Fetch error:", err));
-  };
+  console.log("Updating product:", productToSend);
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    fetch("http://localhost:3001/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "ACC1001" },
-      body: JSON.stringify(newProduct),
+  fetch(`${API_URL}/${updateProduct.id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: TOKEN
+    },
+    body: JSON.stringify(productToSend)
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to update product");
+      return res.json();
     })
-      .then(res => res.json())
-      .then(() => {
-        fetchProducts();
-        setNewProduct({ name: "", price: "", color: "" });
-      });
-  };
+    .then(() => {
+      fetchProducts(); // refresh list
+      setUpdateProduct({ id: "", name: "", price: 0, description: "", inStock: true }); // reset form
+    })
+    .catch(err => console.error("Update error:", err));
+};
 
-  const handleUpdate = (e) => {
-    e.preventDefault();
-    fetch(`http://localhost:3001/products/${updateProduct.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: "ACC1001" },
-      body: JSON.stringify(updateProduct),
-    })
-      .then(res => res.json())
-      .then(() => {
-        fetchProducts();
-        setUpdateProduct({ id: "", name: "", price: "", color: "" });
-      });
-  };
 
-  // Delete product
-  const handleDelete = (e) => {
-    e.preventDefault();
-    fetch(`http://localhost:3001/products/${deleteId}`, {
-      method: "DELETE",
-      headers: { Authorization: "ACC1001" },
+// Delete product
+const handleDelete = (e) => {
+  e.preventDefault();
+  fetch(`${API_URL}/${deleteId}`, {
+    method: "DELETE",
+    headers: { authorization: TOKEN },
+  })
+    .then(res => res.json())
+    .then(() => {
+      fetchProducts();
+      setDeleteId("");
     })
-      .then(res => res.json())
-      .then(() => {
-        fetchProducts();
-        setDeleteId("");
-      });
-  };
-    useEffect(() => {
-    fetchProducts();
-  }, []); // empty dependency array = run only once when mounted
+    .catch(err => console.error("Delete error:", err));
+};
+
+useEffect(() => {
+  fetchProducts();
+}, []);
 
   return (
     
   <div className="main-container">
   {/* Bouton de basculement de thème */}
-  <button className="theme-toggle btn btn-outline-secondary" onClick={toggleTheme}>
-    {theme === "light" ? <i className="bi bi-moon"></i> : <i className="bi bi-sun"></i>}
-  </button>
+ 
 
   {/* Header */}
   <div className="app-header">
@@ -192,35 +253,31 @@ function App() {
         </h2>
       </div>
       <div className="card-body">
-        {products.length === 0 ? (
+        { products.length === 0 ? (
           <div className="empty-state text-center">
             <i className="bi bi-inbox fs-1 text-muted"></i>
             <p>Aucun produit trouvé. Ajoutez votre premier produit ci-dessous.</p>
           </div>
         ) : (
-          <div className="products-list">
-  {products.map(product => (
-    <div key={product._id} className="product-item card mb-3 position-relative p-3">
+         <div className="products-list">
+  {Array.isArray(products) && products.map(product => (
+    <div key={product.id} className="product-item card mb-3 position-relative p-3">
       <div className="product-info">
         <div className="product-name mb-2">
           <i className="bi bi-tag me-2"></i> {product.name}
         </div>
         <div className="product-details">
           <i className="bi bi-currency-dollar me-1"></i> {product.price} •{" "}
-          <i className="bi bi-palette me-1"></i> {product.color}  
+          <i className="bi bi-info-circle me-1"></i> {product.description} •{" "}
+          <i className="bi bi-check-circle me-1"></i> {product.inStock ? "En stock" : "Rupture de stock"}
         </div>
-
-        {/* ID at bottom-left */}
-        <div
-          className="id"
-        >
+        <div className="id">
           ID: {product.id}
         </div>
       </div>
     </div>
   ))}
 </div>
-
         )}
       </div>
     </div>
@@ -252,10 +309,22 @@ function App() {
               />
               <input
                 className="form-control mb-2"
-                placeholder="Couleur"
-                value={newProduct.color}
-                onChange={e => setNewProduct({ ...newProduct, color: e.target.value })}
+                placeholder="description"
+                value={newProduct.description}
+                onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
               />
+              <div className="form-check mb-2">
+  <input
+    className="form-check-input"
+    type="checkbox"
+    checked={newProduct.inStock}
+    onChange={e => setNewProduct({ ...newProduct, inStock: e.target.checked })}
+    id="inStockCheckbox"
+  />
+  <label className="form-check-label" htmlFor="inStockCheckbox">
+    En stock
+  </label>
+</div>
               <button type="submit" className="btn btn-success w-100">
                 <i className="bi bi-check-circle"></i> Ajouter
               </button>
@@ -295,10 +364,22 @@ function App() {
               />
               <input
                 className="form-control mb-2"
-                placeholder="Nouvelle couleur"
-                value={updateProduct.color}
-                onChange={e => setUpdateProduct({ ...updateProduct, color: e.target.value })}
+                placeholder=" Nouvelle description"
+                value={updateProduct.description}
+                onChange={e => setUpdateProduct({ ...updateProduct, description: e.target.value })}
               />
+             <div className="form-check mb-2">
+  <input
+    className="form-check-input"
+    type="checkbox"
+    checked={updateProduct.inStock}
+    onChange={e => setUpdateProduct({ ...updateProduct, inStock: e.target.checked })}
+    id="inStockCheckbox"
+  />
+  <label className="form-check-label" htmlFor="inStockCheckbox">
+    En stock
+  </label>
+</div>
               <button type="submit" className="btn btn-primary w-100">
                 <i className="bi bi-save"></i> Modifier
               </button>
@@ -333,8 +414,6 @@ function App() {
     </div>
   </div>
 </div>
-
-
   );
 }
 

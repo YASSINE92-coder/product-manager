@@ -1,13 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../Controllers/productController');
+const Auth = require('../middleware/Auth');
 
+// ✅ Public routes (no Auth)
 router.get('/', productController.getAllproducts);
 router.get('/search', productController.SearchProductByname);
-router.get('/:id', productController.getAllproductByid);
-router.post('/', productController.CreateProduct);
-router.get('/:min/:max', productController.SearchProductBymaxpriceandminproce);
-router.put('/:id', productController.UpdateProductByid);
-router.delete('/:id', productController.deleteProductByid);
+
+// ✅ Protected routes (with Auth)
+router.get('/:min/:max', Auth, productController.SearchProductBymaxpriceandminprice); // must come BEFORE :id
+router.get('/:id', Auth, productController.getAllproductByid);
+router.post('/', Auth, productController.CreateProduct);
+router.put('/:id', Auth, productController.UpdateProductByid);
+router.delete('/:id', Auth, productController.deleteProductByid);
+
 module.exports = router;
- 
