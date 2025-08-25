@@ -5,416 +5,543 @@ import './style.css';
 
 function App() {
   const [products, setProducts] = useState([]);
-  const [newProduct, setNewProduct] = useState({ name: "", price: "" , description: "" , inStock: true });
-  const [updateProduct, setUpdateProduct] = useState({ id: "", name: "", price: "" , description: "", inStock: true });
+  const [newProduct, setNewProduct] = useState({ 
+    name: "", 
+    price: "", 
+    description: "", 
+    inStock: true 
+  });
+  const [updateProduct, setUpdateProduct] = useState({ 
+    id: "", 
+    name: "", 
+    price: "", 
+    description: "", 
+    inStock: true 
+  });
   const [deleteId, setDeleteId] = useState("");
   const [searchName, setSearchName] = useState("");
-  const [min, setMin] = useState();
-  const [max, setMax] = useState();
-// Get all products
-const API_URL = "http://localhost:3001/products";
-const TOKEN = "ACC1001"; // Same token your Auth middleware expects
+  const [min, setMin] = useState("");
+  const [max, setMax] = useState("");
+  const [activeTab, setActiveTab] = useState("add");
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
 
-// Get all products
-const fetchProducts = () => {
-  fetch(API_URL, {
-    headers: { authorization: TOKEN } // matches middleware
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (Array.isArray(data)) {
-        setProducts(data.map(p => ({ ...p, id: p._id })));
-      } else {
-        setProducts([]);
-      }
-    })
-    .catch(err => console.error("Fetch error:", err));
-};
+  const API_URL = "http://localhost:3001/products";
+  const TOKEN = "ACC1001";
 
-// Search by name
-const fetchProductsByName = (e) => {
-  e.preventDefault();
-  fetch(`${API_URL}/search?name=${searchName}`, {
-    headers: { authorization: TOKEN }
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("No products found");
-      return res.json();
-    })
-    .then(data => {
-      const arr = Array.isArray(data) ? data : [data];
-      setProducts(arr.map(p => ({ ...p, id: p._id })));
-    })
-    .catch(err => console.error("Fetch error:", err));
-};
-
-// Search by price
-const fetchProductsByPrice = (e) => {
-  e.preventDefault();
-  fetch(`${API_URL}/${min}/${max}`, {
-    headers: { authorization: TOKEN }
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("No products found");
-      return res.json();
-    })
-    .then(data => {
-      const arr = Array.isArray(data) ? data : [data];
-      setProducts(arr.map(p => ({ ...p, id: p._id })));
-    })
-    .catch(err => console.error("Fetch error:", err));
-};
-
-// Add product
-const handleAdd = (e) => {
-  e.preventDefault();
-
-  // Validate required fields
-  if (!newProduct.name || !newProduct.description || newProduct.price <= 0) {
-    console.error("All fields are required and price must be greater than 0");
-    return;
-  }
- 
-  const productToSend = {
-    ...newProduct,
-    price: Number(newProduct.price),
-    inStock: Boolean(newProduct.inStock)
+  // Show notification
+  const showNotification = (message, type = "success") => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
   };
 
-  console.log("Sending product:", productToSend);
-
-  fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      authorization: TOKEN // ensure proper header format
-    },
-    body: JSON.stringify(productToSend)
-  })
-    .then(async (res) => {
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Failed to add product");
-      }
-      return res.json();
+  // Fetch all products
+  const fetchProducts = () => {
+    fetch(API_URL, {
+      headers: { authorization: TOKEN }
     })
-    .then(() => {
-      fetchProducts(); // refresh product list
-      setNewProduct({ name: "", price: "", description: "", inStock: true }); // reset form
-    })
-    .catch(err => console.error("Add error:", err));
-};
-
-// Update product
-const handleUpdate = (e) => {
-  e.preventDefault();
-
-  if (!updateProduct.id) {
-    console.error("Product ID is required to update");
-    return;
-  }
-  if (!updateProduct.name || !updateProduct.description || updateProduct.price <= 0) {
-    console.error("All fields are required and price must be greater than 0");
-    return;
-  }
-
-  const productToSend = {
-    name: updateProduct.name,
-    price: Number(updateProduct.price),
-    description: updateProduct.description,
-    inStock: Boolean(updateProduct.inStock)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setProducts(data.map(p => ({ ...p, id: p._id })));
+        } else {
+          setProducts([]);
+        }
+      })
+      .catch(err => {
+        console.error("Fetch error:", err);
+        showNotification("Erreur lors du chargement des produits", "error");
+      });
   };
 
-  console.log("Updating product:", productToSend);
-
-  fetch(`${API_URL}/${updateProduct.id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: TOKEN
-    },
-    body: JSON.stringify(productToSend)
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to update product");
-      return res.json();
-    })
-    .then(() => {
-      fetchProducts(); // refresh list
-      setUpdateProduct({ id: "", name: "", price: 0, description: "", inStock: true }); // reset form
-    })
-    .catch(err => console.error("Update error:", err));
-};
-
-
-// Delete product
-const handleDelete = (e) => {
-  e.preventDefault();
-  fetch(`${API_URL}/${deleteId}`, {
-    method: "DELETE",
-    headers: { authorization: TOKEN },
-  })
-    .then(res => res.json())
-    .then(() => {
+  // Search by name
+  const fetchProductsByName = (e) => {
+    e.preventDefault();
+    if (!searchName.trim()) {
       fetchProducts();
-      setDeleteId("");
+      return;
+    }
+    
+    fetch(`${API_URL}/search?name=${searchName}`, {
+      headers: { authorization: TOKEN }
     })
-    .catch(err => console.error("Delete error:", err));
-};
+      .then(res => {
+        if (!res.ok) throw new Error("Aucun produit trouvé");
+        return res.json();
+      })
+      .then(data => {
+        const arr = Array.isArray(data) ? data : [data];
+        setProducts(arr.map(p => ({ ...p, id: p._id })));
+      })
+      .catch(err => {
+        console.error("Search error:", err);
+        showNotification(err.message, "error");
+      });
+  };
 
-useEffect(() => {
-  fetchProducts();
-}, []);
+  // Search by price
+  const fetchProductsByPrice = (e) => {
+    e.preventDefault();
+    if (!min && !max) {
+      fetchProducts();
+      return;
+    }
+    
+    fetch(`${API_URL}/${min || 0}/${max || 999999}`, {
+      headers: { authorization: TOKEN }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Aucun produit trouvé");
+        return res.json();
+      })
+      .then(data => {
+        const arr = Array.isArray(data) ? data : [data];
+        setProducts(arr.map(p => ({ ...p, id: p._id })));
+      })
+      .catch(err => {
+        console.error("Search error:", err);
+        showNotification(err.message, "error");
+      });
+  };
+
+  // Add product
+  const handleAdd = (e) => {
+    e.preventDefault();
+
+    if (!newProduct.name || !newProduct.description || newProduct.price <= 0) {
+      showNotification("Tous les champs sont requis", "error");
+      return;
+    }
+
+    const productToSend = {
+      ...newProduct,
+      price: Number(newProduct.price),
+      inStock: Boolean(newProduct.inStock)
+    };
+
+    fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        authorization: TOKEN
+      },
+      body: JSON.stringify(productToSend)
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.message || "Échec de l'ajout");
+        }
+        return res.json();
+      })
+      .then(() => {
+        fetchProducts();
+        setNewProduct({ name: "", price: "", description: "", inStock: true });
+        showNotification("Produit ajouté avec succès!");
+      })
+      .catch(err => {
+        console.error("Add error:", err);
+        showNotification(err.message, "error");
+      });
+  };
+
+  // Update product
+  const handleUpdate = (e) => {
+    e.preventDefault();
+
+    if (!updateProduct.id) {
+      showNotification("ID du produit requis", "error");
+      return;
+    }
+    if (!updateProduct.name || !updateProduct.description || updateProduct.price <= 0) {
+      showNotification("Tous les champs sont requis", "error");
+      return;
+    }
+
+    const productToSend = {
+      name: updateProduct.name,
+      price: Number(updateProduct.price),
+      description: updateProduct.description,
+      inStock: Boolean(updateProduct.inStock)
+    };
+
+    fetch(`${API_URL}/${updateProduct.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: TOKEN
+      },
+      body: JSON.stringify(productToSend)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Échec de la mise à jour");
+        return res.json();
+      })
+      .then(() => {
+        fetchProducts();
+        setUpdateProduct({ id: "", name: "", price: "", description: "", inStock: true });
+        showNotification("Produit mis à jour!");
+      })
+      .catch(err => {
+        console.error("Update error:", err);
+        showNotification(err.message, "error");
+      });
+  };
+
+  // Delete product
+  const handleDelete = (e) => {
+    e.preventDefault();
+    
+    if (!deleteId) {
+      showNotification("ID du produit requis", "error");
+      return;
+    }
+
+    fetch(`${API_URL}/${deleteId}`, {
+      method: "DELETE",
+      headers: { authorization: TOKEN },
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("Échec de la suppression");
+        return res.json();
+      })
+      .then(() => {
+        fetchProducts();
+        setDeleteId("");
+        showNotification("Produit supprimé!");
+      })
+      .catch(err => {
+        console.error("Delete error:", err);
+        showNotification(err.message, "error");
+      });
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   return (
-    
-  <div className="main-container">
-  {/* Bouton de basculement de thème */}
- 
+    <div className="dashboard">
+      {/* Notification Toast */}
+      {notification.show && (
+        <div className={`toast show position-fixed top-0 end-0 m-3 ${notification.type === 'error' ? 'bg-danger' : 'bg-success'}`} 
+             style={{ zIndex: 1050 }}>
+          <div className="toast-body text-white">
+            {notification.message}
+          </div>
+        </div>
+      )}
 
-  {/* Header */}
-  <div className="app-header">
-    <div className="container">
-      <h1 className="app-title">
-        <i className="bi bi-box-seam me-2"></i> Gestionnaire de Produits
-      </h1>
-    </div>
-  </div>
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Header */}
+        <div className="app-header d-flex justify-content-between align-items-center mb-4">
+          <h1 className="app-title mb-0">
+            <i className="bi bi-box-seam me-2"></i> Gestion des Produits
+          </h1>
+          <div className="stats d-flex gap-3">
+            <span className="badge bg-primary">Total: {products.length}</span>
+          </div>
+        </div>
 
-  <div className="container">
-    {/* 🔍 Recherche par nom & prix */}
-    <div className="row mb-4">
-      {/* Recherche par nom */}
-      <div className="col-md-6 mb-3">
-        <div className="card fade-in">
+        {/* Search Section */}
+        <div className="card mb-4">
           <div className="card-header">
-            <h3 className="card-title">
-              <i className="bi bi-search me-2"></i> Recherche par Nom
+            <h3 className="card-title mb-0">
+              <i className="bi bi-search me-2"></i> Recherche
             </h3>
           </div>
           <div className="card-body">
-            <form onSubmit={fetchProductsByName}>
-              <div className="form-row d-flex gap-2">
-                <input
-                  className="form-control"
-                  placeholder="Nom du produit"
-                  value={searchName}
-                  onChange={e => setSearchName(e.target.value)}
-                />
-                <button type="submit" className="btn btn-primary">
-                  <i className="bi bi-search"></i>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <form onSubmit={fetchProductsByName} className="d-flex gap-2">
+                  <input
+                    className="form-control"
+                    placeholder="Rechercher par nom"
+                    value={searchName}
+                    onChange={e => setSearchName(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-outline-primary">
+                    <i className="bi bi-search"></i>
+                  </button>
+                </form>
+              </div>
+              <div className="col-md-6">
+                <form onSubmit={fetchProductsByPrice} className="d-flex gap-2">
+                  <input
+                    className="form-control"
+                    placeholder="Prix min"
+                    type="number"
+                    value={min}
+                    onChange={e => setMin(e.target.value)}
+                  />
+                  <input
+                    className="form-control"
+                    placeholder="Prix max"
+                    type="number"
+                    value={max}
+                    onChange={e => setMax(e.target.value)}
+                  />
+                  <button type="submit" className="btn btn-outline-primary">
+                    <i className="bi bi-search"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products Grid */}
+        <div className="card mb-4">
+          <div className="card-header d-flex justify-content-between align-items-center">
+            <h3 className="card-title mb-0">
+              <i className="bi bi-collection me-2"></i> Liste des Produits
+            </h3>
+            <button className="btn btn-sm btn-outline-secondary" onClick={fetchProducts}>
+              <i className="bi bi-arrow-clockwise"></i> Actualiser
+            </button>
+          </div>
+          <div className="card-body">
+            {products.length === 0 ? (
+              <div className="text-center py-5">
+                <i className="bi bi-inbox fs-1 text-muted mb-3"></i>
+                <p className="mb-0">Aucun produit trouvé</p>
+                <button className="btn btn-link" onClick={() => setActiveTab("add")}>
+                  Ajouter votre premier produit
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {/* Recherche par prix */}
-      <div className="col-md-6 mb-3">
-        <div className="card fade-in">
-          <div className="card-header">
-            <h3 className="card-title">
-              <i className="bi bi-cash-coin me-2"></i> Recherche par Prix
-            </h3>
-          </div>
-          <div className="card-body">
-            <form onSubmit={fetchProductsByPrice}>
-              <div className="form-row d-flex gap-2">
-                <input
-                  className="form-control"
-                  placeholder="Prix minimum"
-                  type="number"
-                  value={min}
-                  onChange={e => setMin(e.target.value)}
-                />
-                <input
-                  className="form-control"
-                  placeholder="Prix maximum"
-                  type="number"
-                  value={max}
-                  onChange={e => setMax(e.target.value)}
-                />
+            ) : (
+              <div className="products-grid">
+                {products.map(product => (
+                  <div key={product.id} className="product-card">
+                    <div className="product-id text-muted small">ID: {product.id.substring(0, 8)}</div>
+                    <h4 className="mt-2">{product.name}</h4>
+                    <p className="text-muted">{product.description}</p>
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                      <span className="fw-bold">{product.price.toFixed(2)} €</span>
+                      <span className={`badge ${product.inStock ? 'bg-success' : 'bg-danger'}`}>
+                        {product.inStock ? 'En stock' : 'Rupture'}
+                      </span>
+                    </div>
+                    <div className="mt-3 d-flex gap-2">
+                      <button 
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => {
+                          setUpdateProduct({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            description: product.description,
+                            inStock: product.inStock
+                          });
+                          setActiveTab("edit");
+                        }}
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => {
+                          setDeleteId(product.id);
+                          setActiveTab("delete");
+                        }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <button type="submit" className="btn btn-primary w-100 mt-2">
-                <i className="bi bi-search"></i> Rechercher
-              </button>
-            </form>
+            )}
           </div>
         </div>
-      </div>
-    </div>
 
-    {/* 📋 Liste des produits */}
-    <div className="card fade-in mb-4">
-      <div className="card-header">
-        <h2 className="card-title">
-          <i className="bi bi-collection me-2"></i> Liste des Produits
-        </h2>
-      </div>
-      <div className="card-body">
-        { products.length === 0 ? (
-          <div className="empty-state text-center">
-            <i className="bi bi-inbox fs-1 text-muted"></i>
-            <p>Aucun produit trouvé. Ajoutez votre premier produit ci-dessous.</p>
-          </div>
-        ) : (
-         <div className="products-list">
-  {Array.isArray(products) && products.map(product => (
-    <div key={product.id} className="product-item card mb-3 position-relative p-3">
-      <div className="product-info">
-        <div className="product-name mb-2">
-          <i className="bi bi-tag me-2"></i> {product.name}
-        </div>
-        <div className="product-details">
-          <i className="bi bi-currency-dollar me-1"></i> {product.price} •{" "}
-          <i className="bi bi-info-circle me-1"></i> {product.description} •{" "}
-          <i className="bi bi-check-circle me-1"></i> {product.inStock ? "En stock" : "Rupture de stock"}
-        </div>
-        <div className="id">
-          ID: {product.id}
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
-        )}
-      </div>
-    </div>
-
-    {/* ➕ Modifier / Supprimer / Ajouter */}
-    <div className="row">
-      {/* Ajouter */}
-      <div className="col-md-4 mb-4">
-        <div className="card fade-in">
+        {/* Action Tabs */}
+        <div className="card">
           <div className="card-header">
-            <h3 className="card-title">
-              <i className="bi bi-plus-circle me-2"></i> Ajouter un Produit
-            </h3>
+            <ul className="nav nav-tabs card-header-tabs">
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'add' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('add')}
+                >
+                  <i className="bi bi-plus-circle me-1"></i> Ajouter
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'edit' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('edit')}
+                >
+                  <i className="bi bi-pencil-square me-1"></i> Modifier
+                </button>
+              </li>
+              <li className="nav-item">
+                <button 
+                  className={`nav-link ${activeTab === 'delete' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('delete')}
+                >
+                  <i className="bi bi-trash3 me-1"></i> Supprimer
+                </button>
+              </li>
+            </ul>
           </div>
           <div className="card-body">
-            <form onSubmit={handleAdd}>
-              <input
-                className="form-control mb-2"
-                placeholder="Nom du produit"
-                value={newProduct.name}
-                onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
-              />
-              <input
-                className="form-control mb-2"
-                placeholder="Prix"
-                type="number"
-                value={newProduct.price}
-                onChange={e => setNewProduct({ ...newProduct, price: e.target.value })}
-              />
-              <input
-                className="form-control mb-2"
-                placeholder="description"
-                value={newProduct.description}
-                onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
-              />
-              <div className="form-check mb-2">
-  <input
-    className="form-check-input"
-    type="checkbox"
-    checked={newProduct.inStock}
-    onChange={e => setNewProduct({ ...newProduct, inStock: e.target.checked })}
-    id="inStockCheckbox"
-  />
-  <label className="form-check-label" htmlFor="inStockCheckbox">
-    En stock
-  </label>
-</div>
-              <button type="submit" className="btn btn-success w-100">
-                <i className="bi bi-check-circle"></i> Ajouter
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
+            {/* Add Product Form */}
+            {activeTab === 'add' && (
+              <form onSubmit={handleAdd}>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <label className="form-label">Nom du produit</label>
+                    <input
+                      className="form-control"
+                      placeholder="Nom du produit"
+                      value={newProduct.name}
+                      onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Prix (€)</label>
+                    <input
+                      className="form-control"
+                      placeholder="Prix"
+                      type="number"
+                      step="0.01"
+                      value={newProduct.price}
+                      onChange={e => setNewProduct({ ...newProduct, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Description</label>
+                    <textarea
+                      className="form-control"
+                      placeholder="Description du produit"
+                      rows="2"
+                      value={newProduct.description}
+                      onChange={e => setNewProduct({ ...newProduct, description: e.target.value })}
+                      required
+                    ></textarea>
+                  </div>
+                  <div className="col-md-12">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={newProduct.inStock}
+                        onChange={e => setNewProduct({ ...newProduct, inStock: e.target.checked })}
+                        id="inStockAdd"
+                      />
+                      <label className="form-check-label" htmlFor="inStockAdd">
+                        En stock
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <button type="submit" className="btn btn-primary w-100">
+                      <i className="bi bi-plus-circle me-2"></i> Ajouter le produit
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
-      {/* Modifier */}
-      <div className="col-md-4 mb-4">
-        <div className="card fade-in">
-          <div className="card-header">
-            <h3 className="card-title">
-              <i className="bi bi-pencil-square me-2"></i> Modifier un Produit
-            </h3>
-          </div>
-          <div className="card-body">
-            <form onSubmit={handleUpdate}>
-              <input
-                className="form-control mb-2"
-                placeholder="ID du produit"
-                value={updateProduct.id}
-                onChange={e => setUpdateProduct({ ...updateProduct, id: e.target.value })}
-              />
-              <input
-                className="form-control mb-2"
-                placeholder="Nouveau nom"
-                value={updateProduct.name}
-                onChange={e => setUpdateProduct({ ...updateProduct, name: e.target.value })}
-              />
-              <input
-                className="form-control mb-2"
-                placeholder="Nouveau prix"
-                type="number"
-                value={updateProduct.price}
-                onChange={e => setUpdateProduct({ ...updateProduct, price: e.target.value })}
-              />
-              <input
-                className="form-control mb-2"
-                placeholder=" Nouvelle description"
-                value={updateProduct.description}
-                onChange={e => setUpdateProduct({ ...updateProduct, description: e.target.value })}
-              />
-             <div className="form-check mb-2">
-  <input
-    className="form-check-input"
-    type="checkbox"
-    checked={updateProduct.inStock}
-    onChange={e => setUpdateProduct({ ...updateProduct, inStock: e.target.checked })}
-    id="inStockCheckbox"
-  />
-  <label className="form-check-label" htmlFor="inStockCheckbox">
-    En stock
-  </label>
-</div>
-              <button type="submit" className="btn btn-primary w-100">
-                <i className="bi bi-save"></i> Modifier
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
+            {/* Edit Product Form */}
+            {activeTab === 'edit' && (
+              <form onSubmit={handleUpdate}>
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label">ID du produit</label>
+                    <input
+                      className="form-control"
+                      placeholder="ID du produit à modifier"
+                      value={updateProduct.id}
+                      onChange={e => setUpdateProduct({ ...updateProduct, id: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Nouveau nom</label>
+                    <input
+                      className="form-control"
+                      placeholder="Nouveau nom"
+                      value={updateProduct.name}
+                      onChange={e => setUpdateProduct({ ...updateProduct, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label">Nouveau prix (€)</label>
+                    <input
+                      className="form-control"
+                      placeholder="Nouveau prix"
+                      type="number"
+                      step="0.01"
+                      value={updateProduct.price}
+                      onChange={e => setUpdateProduct({ ...updateProduct, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="col-md-12">
+                    <label className="form-label">Nouvelle description</label>
+                    <textarea
+                      className="form-control"
+                      placeholder="Nouvelle description"
+                      rows="2"
+                      value={updateProduct.description}
+                      onChange={e => setUpdateProduct({ ...updateProduct, description: e.target.value })}
+                      required
+                    ></textarea>
+                  </div>
+                  <div className="col-md-12">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={updateProduct.inStock}
+                        onChange={e => setUpdateProduct({ ...updateProduct, inStock: e.target.checked })}
+                        id="inStockEdit"
+                      />
+                      <label className="form-check-label" htmlFor="inStockEdit">
+                        En stock
+                      </label>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <button type="submit" className="btn btn-primary w-100">
+                      <i className="bi bi-save me-2"></i> Mettre à jour
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
-      {/* Supprimer */}
-      <div className="col-md-4 mb-4">
-        <div className="card fade-in">
-          <div className="card-header">
-            <h3 className="card-title">
-              <i className="bi bi-trash3 me-2"></i> Supprimer un Produit
-            </h3>
-          </div>
-          <div className="card-body">
-            <form onSubmit={handleDelete}>
-              <input
-                className="form-control mb-2"
-                placeholder="ID du produit à supprimer"
-                value={deleteId}
-                onChange={e => setDeleteId(e.target.value)}
-              />
-              <button type="submit" className="btn btn-danger w-100">
-                <i className="bi bi-x-circle"></i> Supprimer
-              </button>
-            </form>
+            {/* Delete Product Form */}
+            {activeTab === 'delete' && (
+              <form onSubmit={handleDelete}>
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <label className="form-label">ID du produit à supprimer</label>
+                    <input
+                      className="form-control"
+                      placeholder="ID du produit"
+                      value={deleteId}
+                      onChange={e => setDeleteId(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="col-12">
+                    <button type="submit" className="btn btn-danger w-100">
+                      <i className="bi bi-trash3 me-2"></i> Supprimer le produit
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
   );
 }
-
 export default App;
