@@ -9,6 +9,9 @@ router.get('/search', productController.SearchProductByname);
 
 // ✅ Protected routes (with Auth)
 router.get('/:min/:max', Auth, productController.SearchProductBymaxpriceandminprice); // must come BEFORE :id
+router.get('/price', Auth, productController.SortByprice); // must come BEFORE :id
+router.get('/stock', Auth, productController.getProductInstock); // must come BEFORE :id
+router.get('/avg', Auth, productController.calculeAvgPriceByStock); // must come BEFORE :id
 router.get('/:id', Auth, productController.getAllproductByid);
 router.post('/', Auth, productController.CreateProduct);
 router.put('/:id', Auth, productController.UpdateProductByid);

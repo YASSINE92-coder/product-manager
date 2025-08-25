@@ -1,9 +1,36 @@
 const ProductModel = require("../Models/products");
-
+const pageSize = 5;
 // ✅ Get all products
 const getAllproducts = async (req, res) => {
   try {
-    const products = await ProductModel.find();
+    const products = await ProductModel.find().limit(pageSize).sort({name:1});
+    res.status(200).json(products);
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+const calculeAvgPriceByStock = async (req, res) => {
+  try {
+    const products = await ProductModel.aggregate([
+      { $match:{inStock :true}}, // filter only in-stock
+      {
+        $group: {
+          _id: null, // we don’t group by a field, just all docs
+          avgPrice: { $avg: "$price" }
+        }
+      }
+    ]);
+    res.status(200).json(products[0] || { avgPrice: 0 });
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+const getProductInstock = async (req, res) => {
+  try {
+    const products = await ProductModel.find({inStock:true});
     res.status(200).json(products);
   } catch (err) {
     console.error("Error fetching products:", err);
@@ -65,6 +92,14 @@ const SearchProductBymaxpriceandminprice = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+const SortByprice = async (req, res) => {
+  try {
+    const products = await ProductModel.find().sort({ price: -1 });
+    res.status(200).json(products);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
 
 // ✅ Update product by ID
 const UpdateProductByid = async (req, res) => {
@@ -107,4 +142,7 @@ module.exports = {
   SearchProductBymaxpriceandminprice,
   UpdateProductByid,
   deleteProductByid,
+  SortByprice,
+  getProductInstock,
+  calculeAvgPriceByStock
 };
