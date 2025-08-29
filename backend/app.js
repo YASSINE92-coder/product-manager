@@ -1,5 +1,6 @@
 const express = require('express');
 const productRouter = require('./Routes/Productroutes');
+
 const cors = require('cors');
 const app = express();
 const port = 3001;
@@ -14,7 +15,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/Product", {
 
 //app.use(cors());  Enable CORS for frontend requests
 app.use(cors({
-  origin: "http://localhost:3000", // React port
+  origin: "http://localhost:5173", // React port
   methods: ["GET","POST","PUT","DELETE"],
   allowedHeaders: ["Content-Type", "authorization"]
 }));

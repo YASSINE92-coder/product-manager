@@ -1,11 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../Controllers/productController');
+const AdminAuth = require('../Controllers/AuthController');
 const Auth = require('../middleware/Auth');
 
 // ✅ Public routes (no Auth)
+
 router.get('/', productController.getAllproducts);
 router.get('/search', productController.SearchProductByname);
+
+// Admin Auth 
+router.post('/Auth', AdminAuth);
 
 // ✅ Protected routes (with Auth)
 router.get('/:min/:max', Auth, productController.SearchProductBymaxpriceandminprice); // must come BEFORE :id
