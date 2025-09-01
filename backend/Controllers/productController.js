@@ -3,7 +3,7 @@ const pageSize = 5;
 // ✅ Get all products
 const getAllproducts = async (req, res) => {
   try {
-    const products = await ProductModel.find().limit(pageSize).sort({name:1});
+    const products = await ProductModel.find().sort({name:1});
     res.status(200).json(products);
   } catch (err) {
     console.error("Error fetching products:", err);

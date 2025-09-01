@@ -7,6 +7,7 @@ import Navbar from "./Navbar";
 import Navbar1 from "./Navbar1";
 import ClientLogin from "./ClientLogin";
 import ClientSignup from "./ClientSignup";
+import Footer from "./footer";
 export default function AppRoutes() {
   return (
     <Router>
@@ -14,8 +15,8 @@ export default function AppRoutes() {
         {/* Client Home with Navbar1 */}
         <Route path="/" element={
           <>
-            <Navbar1 />
             <App />
+            <Footer />
           </>
         } />
         {/* Client Login and Signup */}

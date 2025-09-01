@@ -32,45 +32,73 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-200">
-      <div className="card w-full max-w-md shadow-xl bg-base-100">
-        <div className="card-body">
-          <h2 className="card-title text-2xl mb-6">Login</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="form-control mb-4">
-              <label className="label">
-                <span className="label-text">Email</span>
-              </label>
-              <input
-                type="email"
-                placeholder="email@example.com"
-                className="input input-bordered"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                required
-              />
-            </div>
-            
-            <div className="form-control mb-6">
-              <label className="label">
-                <span className="label-text">Password</span>
-              </label>
-              <input
-                type="password"
-                placeholder="password"
-                className="input input-bordered"
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                required
-              />
-            </div>
-            
-            <button type="submit" className="btn btn-primary w-full">
-              Login
-            </button>
-          </form>
+  <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+  <div className="card w-full max-w-md bg-white shadow-lg rounded-xl border border-gray-100 transition-all duration-200">
+    <div className="card-body p-8">
+
+      {/* Title */}
+      <h2 className="text-2xl font-semibold text-gray-800 text-center mb-2">Login</h2>
+      <p className="text-sm text-gray-500 text-center mb-8">Please enter your credentials to continue.</p>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        
+        {/* Email Field */}
+        <div className="form-control">
+          <label className="label" style={{ marginTop: '3px' }}>
+            <span className="label-text text-gray-700 text-sm font-medium">Email Address</span>
+          </label>
+          <input
+            type="email"
+            placeholder="name@example.com"
+            className="input input-bordered w-full rounded-lg border border-gray-300 
+                       focus:border-[#34967C] focus:ring-1 focus:ring-[#34967C] 
+                       transition-all duration-200 ease-in-out text-gray-800 placeholder-gray-400"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
         </div>
-      </div>
+
+        {/* Password Field */}
+        <div className="form-control">
+          <label className="label" style={{ marginTop: '3px' }}>
+            <span className="label-text text-gray-700 text-sm font-medium">Password</span>
+          </label>
+          <input
+            type="password"
+            placeholder="••••••••"
+            className="input input-bordered w-full rounded-lg border border-gray-300 
+                       focus:border-[#34967C] focus:ring-1 focus:ring-[#34967C] 
+                       transition-all duration-200 ease-in-out text-gray-800 placeholder-gray-400"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required
+          />
+        </div>
+
+        {/* Forgot Password */}
+        <div className="text-right">
+          <a
+            href="#forgot"
+            className="text-sm text-[#34967C] hover:text-[#2c7d68] transition-colors duration-150"
+          >
+            Forgot password?
+          </a>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="btn btn-primary w-full py-3 mt-2 bg-[#34967C] hover:bg-[#2c7d68] 
+                     text-white font-medium rounded-lg shadow-sm hover:shadow 
+                     transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 
+                     focus:ring-offset-2 focus:ring-[#34967C]"
+        >
+          Log In
+        </button>
+      </form>
     </div>
+  </div>
+</div>
   );
 }

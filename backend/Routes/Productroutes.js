@@ -8,8 +8,8 @@ const Auth = require('../middleware/Auth');
 
 router.get('/', productController.getAllproducts);
 router.get('/search', productController.SearchProductByname);
-
 // Admin Auth 
+
 router.post('/Auth', AdminAuth);
 
 // ✅ Protected routes (with Auth)

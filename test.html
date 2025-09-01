@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Reset CSS Practice</title>
+<style>
+    /* Child Selector: Styles all paragraphs (p) inside a div element with the class "container" */
+    .container > p {
+        color: blue;
+        font-family: Arial, sans-serif;
+    }
+    /* Child Selector: Styles all paragraphs (p) inside a div element */
+    div > p {
+        color: rgb(152, 14, 14);
+        font-family: Arial, sans-serif;
+    }
+    /* Adjacent Sibling Selector: Styles all headings (h2) that immediately follow an h1 heading */
+
+    h1 + h2 {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+    text-align: center;
+    }
+
+    /* General Sibling Selector: Styles all paragraphs (p) that come after a div element with the class "highlight" */
+
+    .highlight ~ p {
+    text-align: center;
+    padding: 5px;
+    border: 1px solid #ccc;
+    }
+
+    .containerr  p {
+    color: green;
+    }
+    /* Pseudo-Class: Changes the color of links when hovered over */
+
+a:hover {
+  color: red;
+  text-decoration: underline;
+  text-decoration : none;
+
+}
+
+/* Pseudo-Class: Indicates a selected button with a different background color */
+
+button:active {
+  background-color: #007bff;
+  color: white;
+  
+}
+
+/* Pseudo-Class: Changes the border color of input fields when focused */
+input:focus {
+  border-color: #096711;
+  box-shadow:0 0 8px #096711;
+}
+
+/* Pseudo-Element: Creates a drop cap for the first letter of paragraphs */
+
+p::first-letter{
+  font-size: 15px;
+  font-style: italic;
+
+}
+
+/* Pseudo-Element: Adds a subtle shadow around images */
+
+.img-box {
+  position: relative;
+  display: inline-block;
+}
+
+.img-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 80%;   /* custom width */
+  height: 60px;   /*ustom height */      
+  background-color: rgba(0, 0, 0, 0.326);
+}
+/* Resets */
+body, p, h1, nav, a, img {
+    margin: 0;
+    padding: 0;
+}
+
+/* Styles for header (Block Element) */
+header {
+    background-color: #f0f0f0;
+    padding: 20px;
+    text-align: center;
+}
+
+/* Styles for navigation menu (Inline Element) */
+nav a {
+    margin-right: 20px;
+    color: blue;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Styles for main content area */
+main {
+    padding: 20px;
+    text-align: center;
+}
+
+/* Styles for paragraphs (Block Element) */
+p {
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+/* Styles for images (Inline Element) */
+img {
+    border: 2px solid #333;
+    /* Making the inline img element behave like a block-level element for centering */
+    display: block;
+    margin: auto;
+}
+
+/* Styles for footer (Block Element) */
+footer {
+    background-color: #f0f0f0;
+    padding: 10px;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Styling the footer's paragraph */
+footer p {
+    color: #666;
+}
+</style>
+</head>
+<body>
+      <!-- Html Child Element-->
+<div class="container">
+  <p>This paragraph is a direct child of the div with class 'container'.</p>
+  <p>This paragraph is a direct child of the div with class 'container'.</p>
+  <span>This span is also a child of the div, but not targeted by the child selector.</span>
+  <div>
+    <p>This paragraph is not targeted because it's not a direct child.</p>
+  </div>
+</div>
+
+<!-- Html Adjacent Element-->
+<h1>Heading 1</h1>
+<h2>1.First h1</h2>
+<h2>2.Second h2 </h2>
+<p>Another paragraph, not affected by the adjacent sibling selector.</p>
+
+<div class="highlight">Highlighted content</div>
+<p>This paragraph is a general sibling of the div and will be styled.</p>
+<p>This second paragraph is also a general sibling of the div and will be styled.</p>
+  <div>
+    <p>This paragraph is not targeted because it's not a direct child.</p>
+ </div>
+
+<div class="containerr">  
+  <p>This paragraph is a descendant of .container.</p>
+  <section>
+    <p>This paragraph is also a descendant of .container, but nested deeper.</p>
+  </section>
+</div>
+    <a href="#">Hover over this link</a>
+    <input type="text" placeholder="Focus on me">
+    <button>Click this button</button>
+
+    <p>The first letter of this paragraph will be styled as a drop cap.</p>
+    <div class="img-box">
+    <img src="https://arboricat.com/wp-content/uploads/2021/12/prenoms-chat-2022.jpg" alt="example">
+    </div>
+
+    <header>
+        <h1>Web Page Header</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <p>This is a paragraph in the main content area. <a href="#">This is an inline link</a> within a block-level paragraph element.</p>
+        <img src="https://via.placeholder.com/150" alt="Placeholder Image">
+    </main>
+    <footer>
+        <p>Web Page Footer</p>
+    </footer>
+
+</body>
+</html
